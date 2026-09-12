@@ -1,4 +1,4 @@
-MON BILAN BUCCO-DENTAIRE — V10.2.2
+MON BILAN BUCCO-DENTAIRE — V10.3
 
 # Mon Bilan Bucco-Dentaire — prototype V1
 
@@ -89,3 +89,11 @@ NOUVEAUTES V10
 
 IMPORTANT
 La publishable key Supabase est publique par conception. Ne jamais ajouter de secret key, service_role key ou mot de passe de base de données au code du site.
+
+
+NOUVEAUTES V10.3
+-----------------
+- Genre proposé : Masculin, Féminin, Non-binaire, Autre, Je préfère ne pas répondre.
+- Les tranches d’âge Moins de 12 mois, 12 à 35 mois, 3 à 5 ans et 6 à 11 ans sont affichées uniquement lorsque « Pour mon enfant » est choisi.
+- Pour « Pour moi-même » et « Pour une autre personne », les tranches commencent à 12–17 ans.
+- Connexion et collecte Supabase conservées depuis V10.2 ; app_version envoyé : V10.3.

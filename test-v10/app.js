@@ -1,5 +1,5 @@
 
-const APP_VERSION = "V10.2";
+const APP_VERSION = "V10.3";
 const SEMINAR_CODE = "seminaire_2026_11_27_29";
 const CONSENT_VERSION = "v2-2026-09";
 const SUPABASE_URL = "https://wnhunsumbxjjjypcnaok.supabase.co";
@@ -114,9 +114,10 @@ const q = [
     help: "Cette information est facultative et pourra servir uniquement à décrire les participants de façon statistique.",
     type: "single",
     options: [
-      ["woman","Femme / fille"],
-      ["man","Homme / garçon"],
-      ["nonbinary","Non-binaire / autre"],
+      ["man","Masculin"],
+      ["woman","Féminin"],
+      ["nonbinary","Non-binaire"],
+      ["other","Autre"],
       ["prefer_not","Je préfère ne pas répondre"]
     ],
     next: "age_group"
@@ -129,13 +130,20 @@ const q = [
       "Dans quelle tranche d’âge se trouve votre enfant ?",
       "Dans quelle tranche d’âge se trouve la personne évaluée ?"
     ),
-    help: "Chez les jeunes enfants, l’âge exact sera demandé en mois afin d’adapter le questionnaire au développement dentaire.",
+    help: () => respondentMode() === "child"
+      ? "Pour les jeunes enfants, l’âge exact pourra être demandé en mois afin d’adapter le questionnaire au développement dentaire."
+      : "Choisissez la tranche d’âge correspondant à la personne évaluée.",
     type: "single",
-    options: [
+    options: () => respondentMode() === "child" ? [
       ["under1","Moins de 12 mois"],
       ["1_2","12 à 35 mois"],
       ["3_5","3 à 5 ans"],
       ["6_11","6 à 11 ans"],
+      ["12_17","12 à 17 ans"],
+      ["18_39","18 à 39 ans"],
+      ["40_64","40 à 64 ans"],
+      ["65plus","65 ans ou plus"]
+    ] : [
       ["12_17","12 à 17 ans"],
       ["18_39","18 à 39 ans"],
       ["40_64","40 à 64 ans"],
