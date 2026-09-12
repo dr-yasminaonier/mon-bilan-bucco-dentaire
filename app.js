@@ -1,8 +1,15 @@
 
+const APP_VERSION = "V10.2";
+const SEMINAR_CODE = "seminaire_2026_11_27_29";
+const CONSENT_VERSION = "v2-2026-09";
+const SUPABASE_URL = "https://wnhunsumbxjjjypcnaok.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_q-dNYVIHbB-VFXLhtfTHZA_bxfmofji";
+
 const state = {
   answers: {},
   history: [],
-  currentId: "consent"
+  currentId: "consent",
+  submitted: false
 };
 
 function respondentMode() {
@@ -69,7 +76,7 @@ const q = [
     help: "Il s’agit d’un outil d’information et d’orientation. Il ne pose aucun diagnostic et ne remplace pas un professionnel de santé.",
     type: "single",
     options: [["yes", "Oui, j’ai compris et je souhaite continuer"]],
-    next: "respondent"
+    next: "study_consent"
   },
   {
     id: "respondent",
@@ -152,6 +159,18 @@ const q = [
     type: "number",
     min: 3, max: 110,
     next: "redflags"
+  },
+  {
+    id: "study_consent",
+    section: "Participation facultative",
+    title: "Acceptez-vous que les réponses de ce bilan soient enregistrées sans nom ni coordonnées pour les statistiques du séminaire ?",
+    help: "Ce choix est demandé avant le questionnaire. La participation à la collecte est entièrement facultative : vous pouvez refuser sans conséquence et utiliser le bilan normalement. Aucun nom, e-mail, téléphone ni date de naissance n’est demandé. Si le bilan concerne un mineur, l’autorisation de collecte doit être donnée par son parent ou responsable légal.",
+    type: "single",
+    options: [
+      ["yes", "Oui, j’accepte la collecte de mes réponses pour les statistiques"],
+      ["no", "Non, je ne souhaite pas participer à la collecte"]
+    ],
+    next: "respondent"
   },
 
   // SOCLE DE SECURITE COMMUN
@@ -1179,6 +1198,7 @@ document.getElementById("restart-btn").addEventListener("click", () => {
   state.answers = {};
   state.history = [];
   state.currentId = "consent";
+  state.submitted = false;
   result.classList.add("hidden");
   welcome.classList.remove("hidden");
 });
@@ -1737,6 +1757,91 @@ function reasonsForLevel(level) {
   return reasons;
 }
 
+function sanitizedAnswersForStudy() {
+  // L’âge exact sert à adapter le parcours, mais n’est pas transmis à la base.
+  const copy = { ...state.answers };
+  delete copy.age_years;
+  delete copy.age_months;
+  delete copy.consent;
+  delete copy.study_consent;
+  return copy;
+}
+
+function plaqueForStudy() {
+  const value = computePlaque();
+  if (!Number.isFinite(value)) return null;
+  const bounded = Math.max(0, Math.min(100, value));
+  return Math.round(bounded * 100) / 100;
+}
+
+async function submitStudyResponse(level) {
+  const status = document.getElementById("data-collection-status");
+  if (!status) return;
+
+  if (state.answers.study_consent !== "yes") {
+    status.innerHTML = "<strong>Collecte facultative :</strong> vos réponses n’ont pas été enregistrées.";
+    return;
+  }
+  if (state.submitted) return;
+
+  status.innerHTML = "<strong>Collecte facultative :</strong> enregistrement de votre participation…";
+
+  let body;
+  try {
+    const payload = {
+      app_version: APP_VERSION,
+      seminar_code: SEMINAR_CODE,
+      study_consent: true,
+      consent_version: CONSENT_VERSION,
+      respondent_type: respondentMode() === "self" ? "self" : (state.answers.relationship || respondentMode()),
+      age_band: state.answers.age_group || null,
+      gender: state.answers.gender || null,
+      result_priority: level.code,
+      plaque_index: plaqueForStudy(),
+      answers: sanitizedAnswersForStudy()
+    };
+    body = JSON.stringify(payload);
+  } catch (error) {
+    console.error("Impossible de préparer les données statistiques", error);
+    status.innerHTML = `<strong>Le bilan reste valable :</strong> les réponses n’ont pas pu être préparées pour l’enregistrement (${error.message}).`;
+    return;
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/questionnaire_responses_v2`, {
+      method: "POST",
+      headers: {
+        "apikey": SUPABASE_PUBLISHABLE_KEY,
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal"
+      },
+      body,
+      signal: controller.signal
+    });
+
+    const responseText = await response.text();
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const detail = responseText ? ` — ${responseText}` : "";
+      throw new Error(`HTTP ${response.status}${detail}`);
+    }
+
+    state.submitted = true;
+    status.innerHTML = `<strong>✓ Participation enregistrée :</strong> Supabase a accepté la réponse (HTTP ${response.status}).`;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.error("Enregistrement statistique impossible", error);
+    const detail = error && error.name === "AbortError"
+      ? "délai d’attente dépassé (12 secondes)"
+      : (error?.message || "erreur inconnue");
+    status.innerHTML = `<strong>Le bilan reste valable :</strong> les réponses n’ont pas pu être enregistrées. <span style="word-break:break-word">${detail}</span>`;
+  }
+}
+
 function showResult() {
   quiz.classList.add("hidden");
   result.classList.remove("hidden");
@@ -1793,6 +1898,10 @@ function showResult() {
       ${rowsHtml}
     </div>
 
+    <div class="notice data-collection-notice" id="data-collection-status" style="margin-top:22px">
+      <strong>Collecte facultative :</strong> vérification en cours…
+    </div>
+
     <div class="notice" style="margin-top:22px">
       <strong>Ce résultat n’est pas un diagnostic.</strong>
       Il repose uniquement sur les réponses fournies. Une carie débutante, une maladie parodontale silencieuse
@@ -1800,5 +1909,6 @@ function showResult() {
     </div>
   `;
 
+  submitStudyResponse(level);
   window.scrollTo({ top: 0, behavior: "smooth" });
 }

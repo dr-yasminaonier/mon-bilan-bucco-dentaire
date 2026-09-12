@@ -1,3 +1,5 @@
+MON BILAN BUCCO-DENTAIRE — V10.2.2
+
 # Mon Bilan Bucco-Dentaire — prototype V1
 
 Cette web-app fonctionne sans installation ni serveur.
@@ -74,3 +76,16 @@ V8 — questionnaire adaptatif :
 - tabac/vape non posé aux enfants, et posé seulement à partir de 15 ans chez l’adolescent ;
 - suppression des modules adultes (détartrage, implants/prothèses, dents manquantes anciennes) chez les enfants ;
 - résultats et conseils adaptés aux réponses pédiatriques.
+
+
+NOUVEAUTES V10
+- Consentement séparé et facultatif pour la collecte statistique.
+- Refus : aucune réponse n'est envoyée à Supabase et le bilan fonctionne normalement.
+- Accord : envoi via l'API Supabase vers questionnaire_responses_v2.
+- L'âge exact (années/mois) est utilisé localement pour adapter le questionnaire mais n'est pas transmis ; seule la tranche d'âge est conservée.
+- Aucune donnée nominative demandée.
+- En cas d'échec réseau/Supabase, le résultat reste affiché et utilisable.
+- Version enregistrée : V10.
+
+IMPORTANT
+La publishable key Supabase est publique par conception. Ne jamais ajouter de secret key, service_role key ou mot de passe de base de données au code du site.
