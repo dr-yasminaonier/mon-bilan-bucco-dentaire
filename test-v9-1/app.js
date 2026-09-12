@@ -1825,12 +1825,28 @@ async function submitStudyResponse(level) {
     } finally {
       clearTimeout(timeoutId);
     }
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    if (!response.ok) {
+      let detail = "";
+      try {
+        const raw = await response.text();
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            detail = parsed.message || parsed.error || parsed.code || raw;
+          } catch {
+            detail = raw;
+          }
+        }
+      } catch {}
+      throw new Error(`HTTP ${response.status}${detail ? ` — ${detail}` : ""}`);
+    }
     state.submitted = true;
     status.innerHTML = "<strong>Merci :</strong> votre participation statistique a bien été enregistrée.";
   } catch (error) {
     console.error("Enregistrement statistique impossible", error);
-    status.innerHTML = "<strong>Le bilan reste valable :</strong> vos réponses n’ont pas pu être enregistrées pour les statistiques (connexion indisponible ou erreur technique).";
+    const isTimeout = error && error.name === "AbortError";
+    const message = isTimeout ? "délai dépassé après 10 secondes" : (error?.message || "erreur inconnue");
+    status.innerHTML = `<strong>Test technique :</strong> enregistrement impossible. <span style="font-family:monospace">${escapeHtml(message)}</span><br><small>Le bilan reste valable. Cette information sert uniquement au test V9.2.</small>`;
   }
 }
 
