@@ -1,5 +1,5 @@
 
-const APP_VERSION = "V10.1";
+const APP_VERSION = "V10.2";
 const SEMINAR_CODE = "seminaire_2026_11_27_29";
 const CONSENT_VERSION = "v2-2026-09";
 const SUPABASE_URL = "https://wnhunsumbxjjjypcnaok.supabase.co";
@@ -1768,8 +1768,10 @@ function sanitizedAnswersForStudy() {
 }
 
 function plaqueForStudy() {
-  const value = plaqueValue();
-  return Number.isFinite(value) ? Math.round(value * 100) / 100 : null;
+  const value = computePlaque();
+  if (!Number.isFinite(value)) return null;
+  const bounded = Math.max(0, Math.min(100, value));
+  return Math.round(bounded * 100) / 100;
 }
 
 async function submitStudyResponse(level) {
@@ -1783,21 +1785,21 @@ async function submitStudyResponse(level) {
   if (state.submitted) return;
 
   status.innerHTML = "<strong>Collecte facultative :</strong> enregistrement de votre participation…";
-  const payload = {
-    app_version: APP_VERSION,
-    seminar_code: SEMINAR_CODE,
-    study_consent: true,
-    consent_version: CONSENT_VERSION,
-    respondent_type: respondentMode() === "self" ? "self" : (state.answers.relationship || respondentMode()),
-    age_band: state.answers.age_group || null,
-    gender: state.answers.gender || null,
-    result_priority: level.code,
-    plaque_index: plaqueForStudy(),
-    answers: sanitizedAnswersForStudy()
-  };
 
   let body;
   try {
+    const payload = {
+      app_version: APP_VERSION,
+      seminar_code: SEMINAR_CODE,
+      study_consent: true,
+      consent_version: CONSENT_VERSION,
+      respondent_type: respondentMode() === "self" ? "self" : (state.answers.relationship || respondentMode()),
+      age_band: state.answers.age_group || null,
+      gender: state.answers.gender || null,
+      result_priority: level.code,
+      plaque_index: plaqueForStudy(),
+      answers: sanitizedAnswersForStudy()
+    };
     body = JSON.stringify(payload);
   } catch (error) {
     console.error("Impossible de préparer les données statistiques", error);
