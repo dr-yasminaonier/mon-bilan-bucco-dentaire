@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f5fbfa" />
+  <title>Mon Bilan Bucco-Dentaire</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <section class="hero card" id="welcome-screen">
+      <div class="brand-mark" aria-hidden="true">🦷</div>
+      <p class="eyebrow">Séminaire de santé bucco-dentaire</p>
+      <h1>Mon Bilan Bucco-Dentaire</h1>
+      <p class="lead">
+        Répondez à des questions simples et illustrées sur vos dents, vos gencives, votre langue, vos symptômes
+        et vos habitudes pour obtenir un niveau d’orientation et des conseils de prévention.
+      </p>
+      <div class="notice">
+        <strong>Important :</strong> cet outil ne pose aucun diagnostic et ne remplace pas
+        l’examen d’un chirurgien-dentiste ou d’un médecin.
+      </div>
+      <button class="primary" id="start-btn">Commencer mon bilan</button>
+      <p class="microcopy">Durée indicative : environ 3 à 5 minutes.</p>
+    </section>
+
+    <section class="card hidden" id="quiz-screen">
+      <div class="topbar">
+        <div>
+          <p class="eyebrow" id="section-label">Questionnaire</p>
+          <h2 id="question-title">Question</h2>
+        </div>
+        <div class="progress-wrap" aria-label="Progression">
+          <span id="progress-text">1 / 1</span>
+          <div class="progress-track">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+        </div>
+      </div>
+
+      <p class="question-help" id="question-help"></p>
+      <form id="answers-form" class="answers"></form>
+
+      <div class="nav-actions">
+        <button class="secondary" id="back-btn" type="button">Retour</button>
+        <button class="primary" id="next-btn" type="button">Continuer</button>
+      </div>
+    </section>
+
+    <section class="card hidden" id="result-screen">
+      <div id="result-content"></div>
+      <div class="nav-actions result-actions">
+        <button class="secondary" id="restart-btn" type="button">Refaire le bilan</button>
+        <button class="primary" id="print-btn" type="button">Imprimer / enregistrer</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      Outil d’information et d’orientation. En cas de détresse respiratoire, difficulté importante
+      à avaler, traumatisme sévère ou autre urgence médicale, contactez les services d’urgence.
+    </p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
