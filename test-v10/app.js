@@ -1,5 +1,5 @@
 
-const APP_VERSION = "V10";
+const APP_VERSION = "V10.1";
 const SEMINAR_CODE = "seminaire_2026_11_27_29";
 const CONSENT_VERSION = "v2-2026-09";
 const SUPABASE_URL = "https://wnhunsumbxjjjypcnaok.supabase.co";
@@ -1796,6 +1796,18 @@ async function submitStudyResponse(level) {
     answers: sanitizedAnswersForStudy()
   };
 
+  let body;
+  try {
+    body = JSON.stringify(payload);
+  } catch (error) {
+    console.error("Impossible de préparer les données statistiques", error);
+    status.innerHTML = `<strong>Le bilan reste valable :</strong> les réponses n’ont pas pu être préparées pour l’enregistrement (${error.message}).`;
+    return;
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
+
   try {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/questionnaire_responses_v2`, {
       method: "POST",
@@ -1804,14 +1816,27 @@ async function submitStudyResponse(level) {
         "Content-Type": "application/json",
         "Prefer": "return=minimal"
       },
-      body: JSON.stringify(payload)
+      body,
+      signal: controller.signal
     });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const responseText = await response.text();
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const detail = responseText ? ` — ${responseText}` : "";
+      throw new Error(`HTTP ${response.status}${detail}`);
+    }
+
     state.submitted = true;
-    status.innerHTML = "<strong>Merci :</strong> votre participation statistique a bien été enregistrée.";
+    status.innerHTML = `<strong>✓ Participation enregistrée :</strong> Supabase a accepté la réponse (HTTP ${response.status}).`;
   } catch (error) {
+    clearTimeout(timeoutId);
     console.error("Enregistrement statistique impossible", error);
-    status.innerHTML = "<strong>Le bilan reste valable :</strong> vos réponses n’ont pas pu être enregistrées pour les statistiques (connexion indisponible ou erreur technique).";
+    const detail = error && error.name === "AbortError"
+      ? "délai d’attente dépassé (12 secondes)"
+      : (error?.message || "erreur inconnue");
+    status.innerHTML = `<strong>Le bilan reste valable :</strong> les réponses n’ont pas pu être enregistrées. <span style="word-break:break-word">${detail}</span>`;
   }
 }
 
