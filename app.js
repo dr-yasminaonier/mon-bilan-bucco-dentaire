@@ -1,5 +1,5 @@
 
-const APP_VERSION = "V10.3";
+const APP_VERSION = "V10.4";
 const SEMINAR_CODE = "seminaire_2026_11_27_29";
 const CONSENT_VERSION = "v2-2026-09";
 const SUPABASE_URL = "https://wnhunsumbxjjjypcnaok.supabase.co";
@@ -568,6 +568,106 @@ const q = [
       ["never","Jamais"],
       ["unknown","Je ne sais pas"]
     ],
+    next: "care_barrier_child"
+  },
+  {
+    id: "care_barrier_child",
+    section: "Accès aux soins",
+    title: "Y a-t-il actuellement quelque chose qui rend difficile ou décourage une consultation chez le chirurgien-dentiste pour votre enfant ?",
+    type: "single",
+    options: [["yes","Oui"],["no","Non"],["unknown","Je ne sais pas"],["prefer_not","Je préfère ne pas répondre"]],
+    next: a => a === "yes" ? "care_barrier_reasons_child" : "care_delayed_child"
+  },
+  {
+    id: "care_barrier_reasons_child",
+    section: "Accès aux soins",
+    title: "Quelles sont les principales difficultés pour consulter un chirurgien-dentiste pour votre enfant ?",
+    help: "Plusieurs réponses sont possibles.",
+    type: "multi",
+    options: [
+      ["cost","Le coût des soins"],["coverage","Une prise en charge / couverture insuffisante"],
+      ["no_dentist","Je ne sais pas où consulter / difficulté à trouver un dentiste"],["child_dentist","Difficulté à trouver un dentiste qui reçoit les enfants"],
+      ["appointment","Difficulté à obtenir un rendez-vous / délais trop longs"],["distance","Distance ou transport"],
+      ["schedule","Horaires de travail, d’études ou manque de temps"],["child_fear","Mon enfant a peur du dentiste"],
+      ["bad_experience","Une mauvaise expérience antérieure"],["no_pain","Je pensais qu’une consultation n’était pas nécessaire sans douleur"],
+      ["baby_teeth","Je pensais que les dents de lait ne nécessitaient pas de suivi"],["health_access","État de santé, handicap ou besoins particuliers rendant la consultation difficile"],
+      ["language","Difficultés de communication ou de langue"],["other","Autre"],["prefer_not","Je préfère ne pas répondre"]
+    ],
+    next: "care_delayed_child"
+  },
+  {
+    id: "care_delayed_child",
+    section: "Accès aux soins",
+    title: "Avez-vous déjà reporté ou renoncé à une consultation ou à des soins dentaires que vous pensiez nécessaires pour votre enfant ?",
+    type: "single",
+    options: [["multiple","Oui, plusieurs fois"],["once","Oui, une fois"],["no","Non"],["unknown","Je ne sais pas"],["prefer_not","Je préfère ne pas répondre"]],
+    next: a => ["multiple","once"].includes(a) ? "care_delayed_reason_child" : "care_help_child"
+  },
+  {
+    id: "care_delayed_reason_child",
+    section: "Accès aux soins",
+    title: "Quelle a été la raison principale de ce report ou renoncement ?",
+    type: "single",
+    options: [["cost","Coût / prise en charge"],["appointment","Rendez-vous indisponible ou délai trop long"],["distance","Transport / distance"],["schedule","Manque de temps / horaires"],["fear","Peur de l’enfant"],["bad_experience","Mauvaise expérience antérieure"],["no_pain","Absence de douleur / impression que ce n’était pas nécessaire"],["health_access","Santé, handicap ou besoins particuliers"],["other","Autre"],["prefer_not","Je préfère ne pas répondre"]],
+    next: "care_help_child"
+  },
+  {
+    id: "care_help_child",
+    section: "Accès aux soins",
+    title: "Qu’est-ce qui vous aiderait le plus à faire consulter votre enfant plus facilement ?",
+    help: "Plusieurs réponses sont possibles.",
+    type: "multi",
+    options: [["lower_cost","Des soins moins coûteux / une meilleure prise en charge"],["faster","Des rendez-vous plus rapides"],["hours","Des horaires plus adaptés"],["closer","Un cabinet plus proche ou accessible"],["info_aid","Plus d’informations sur les aides et la prise en charge"],["prevention_info","Mieux comprendre l’importance des contrôles réguliers"],["fear_support","Un professionnel habitué aux enfants anxieux"],["accessibility","Une meilleure accessibilité liée à la santé ou au handicap"],["find_dentist","Une aide pour trouver un dentiste"],["nothing","Rien de particulier"],["other","Autre"],["unknown","Je ne sais pas"]],
+    next: "dental_fear_child"
+  },
+  {
+    id: "dental_fear_child",
+    section: "Peur du dentiste",
+    title: "Selon votre observation, votre enfant manifeste-t-il de la peur ou de l’anxiété lorsqu’il doit aller chez le dentiste ?",
+    type: "single",
+    options: [["yes","Oui"],["no","Non"],["never_been","Il n’a jamais consulté, je ne sais pas"],["unknown","Je ne sais pas"],["prefer_not","Je préfère ne pas répondre"]],
+    next: a => a === "yes" ? "dental_fear_score_child" : (() => childAfterDentalVisit())
+  },
+  {
+    id: "dental_fear_score_child",
+    section: "Peur du dentiste",
+    title: "Sur une échelle de 1 à 10, à combien estimez-vous la peur ou l’anxiété de votre enfant face aux soins dentaires ?",
+    help: "1 = très faible ; 10 = extrêmement importante. Il s’agit de votre observation en tant que parent ou responsable.",
+    type: "range", min: 1, max: 10, step: 1,
+    next: "dental_fear_reasons_child"
+  },
+  {
+    id: "dental_fear_reasons_child",
+    section: "Peur du dentiste",
+    title: "Selon vous, qu’est-ce qui provoque cette peur ?",
+    help: "Plusieurs réponses sont possibles.",
+    type: "multi",
+    options: [["pain","Peur d’avoir mal"],["needles","Injections / aiguilles"],["instruments","Bruit ou instruments"],["unknown_place","Environnement ou personnes inconnues"],["loss_control","Sensation de ne pas avoir le contrôle"],["bad_experience","Mauvaise expérience passée"],["stories","Histoires ou peur transmise par l’entourage"],["unknown","Je ne sais pas précisément"],["other","Autre"],["prefer_not","Je préfère ne pas répondre"]],
+    next: a => Array.isArray(a) && a.includes("bad_experience") ? "dental_bad_experience_when_child" : "dental_fear_delayed_child"
+  },
+  {
+    id: "dental_bad_experience_when_child",
+    section: "Peur du dentiste",
+    title: "À quand remonte la mauvaise expérience dentaire de votre enfant ?",
+    type: "single",
+    options: [["lt1","Moins d’un an"],["1_2","1 à 2 ans"],["gt2","Plus de 2 ans"],["unknown","Je ne m’en souviens pas / je ne sais pas"],["prefer_not","Je préfère ne pas répondre"]],
+    next: "dental_bad_experience_reasons_child"
+  },
+  {
+    id: "dental_bad_experience_reasons_child",
+    section: "Peur du dentiste",
+    title: "Qu’est-ce qui a rendu cette expérience difficile pour votre enfant ?",
+    help: "Plusieurs réponses sont possibles.",
+    type: "multi",
+    options: [["pain","Douleur pendant les soins"],["fear","Peur importante pendant les soins"],["not_explained","Le soin n’a pas été suffisamment expliqué ou adapté"],["not_listened","Sa peur ou sa douleur n’a pas semblé suffisamment prise en compte"],["complication","Complication après le soin"],["other","Autre"],["prefer_not","Je préfère ne pas répondre"]],
+    next: "dental_fear_delayed_child"
+  },
+  {
+    id: "dental_fear_delayed_child",
+    section: "Peur du dentiste",
+    title: "La peur de votre enfant vous a-t-elle déjà conduit à reporter ou éviter une consultation dentaire ?",
+    type: "single",
+    options: [["multiple","Oui, plusieurs fois"],["once","Oui, une fois"],["no","Non"],["unknown","Je ne sais pas"],["prefer_not","Je préfère ne pas répondre"]],
     next: () => childAfterDentalVisit()
   },
   {
@@ -972,6 +1072,98 @@ const q = [
     title: "Y a-t-il des consultations régulières même sans douleur ?",
     type: "single",
     options: [["yes","Oui"],["no","Non"],["problem_only","Seulement en cas de problème"],["unknown","Je ne sais pas"]],
+    next: "care_barrier"
+  },
+  {
+    id: "care_barrier",
+    section: "Accès aux soins",
+    title: () => titleFor("Y a-t-il actuellement quelque chose qui vous empêche ou vous décourage de consulter un chirurgien-dentiste ?","","Y a-t-il actuellement quelque chose qui empêche ou décourage cette personne de consulter un chirurgien-dentiste ?"),
+    type: "single",
+    options: [["yes","Oui"],["no","Non"],["unknown","Je ne sais pas"],["prefer_not","Je préfère ne pas répondre"]],
+    next: a => a === "yes" ? "care_barrier_reasons" : "care_delayed"
+  },
+  {
+    id: "care_barrier_reasons",
+    section: "Accès aux soins",
+    title: "Qu’est-ce qui rend la consultation dentaire difficile ou décourageante ?",
+    help: "Plusieurs réponses sont possibles.",
+    type: "multi",
+    options: [["cost","Le coût des soins"],["coverage","Une couverture / prise en charge insuffisante"],["no_dentist","Je ne sais pas où consulter / difficulté à trouver un dentiste"],["appointment","Difficulté à obtenir un rendez-vous / délais trop longs"],["distance","Distance ou transport"],["schedule","Horaires de travail ou d’études / manque de temps"],["caregiving","Je dois m’occuper d’enfants ou d’autres personnes"],["fear","Peur du dentiste ou des soins"],["pain_fear","Peur d’avoir mal"],["bad_experience","Mauvaise expérience passée"],["shame","Gêne ou honte de l’état des dents"],["judgment","Peur d’être jugé(e)"],["no_problem","Je ne ressens pas de problème actuellement"],["no_pain","Je pense qu’il n’est pas nécessaire de consulter sans douleur"],["procrastination","J’ai tendance à repousser le rendez-vous"],["health_access","Maladie, handicap ou état de santé rendant la consultation difficile"],["language","Difficultés de communication ou de langue"],["other","Autre"],["prefer_not","Je préfère ne pas répondre"]],
+    next: "care_delayed"
+  },
+  {
+    id: "care_delayed",
+    section: "Accès aux soins",
+    title: "Avez-vous déjà reporté ou renoncé à une consultation ou à des soins dentaires dont vous pensiez avoir besoin ?",
+    type: "single",
+    options: [["multiple","Oui, plusieurs fois"],["once","Oui, une fois"],["no","Non"],["unknown","Je ne sais pas"],["prefer_not","Je préfère ne pas répondre"]],
+    next: a => ["multiple","once"].includes(a) ? "care_delayed_reason" : "care_help"
+  },
+  {
+    id: "care_delayed_reason",
+    section: "Accès aux soins",
+    title: "Quelle a été la raison principale de ce report ou renoncement ?",
+    type: "single",
+    options: [["cost","Coût / prise en charge"],["appointment","Rendez-vous indisponible ou délai trop long"],["distance","Transport / distance"],["schedule","Manque de temps / horaires"],["fear","Peur ou anxiété dentaire"],["bad_experience","Mauvaise expérience antérieure"],["shame","Honte / peur du jugement"],["no_pain","Absence de douleur / impression que ce n’était pas nécessaire"],["health_access","Santé ou handicap"],["other","Autre"],["prefer_not","Je préfère ne pas répondre"]],
+    next: "care_help"
+  },
+  {
+    id: "care_help",
+    section: "Accès aux soins",
+    title: "Qu’est-ce qui vous aiderait le plus à consulter un chirurgien-dentiste plus facilement ?",
+    help: "Plusieurs réponses sont possibles.",
+    type: "multi",
+    options: [["lower_cost","Des soins moins coûteux / une meilleure prise en charge"],["faster","Des rendez-vous plus rapides"],["hours","Des horaires plus adaptés"],["closer","Un cabinet plus proche ou accessible"],["info_aid","Plus d’informations sur les aides et la prise en charge"],["prevention_info","Mieux comprendre l’importance des contrôles réguliers"],["fear_support","Être rassuré(e) sur la douleur et le déroulement des soins"],["anxiety_dentist","Trouver un professionnel habitué aux patients anxieux"],["accompanied","Pouvoir être accompagné(e)"],["accessibility","Une meilleure accessibilité liée à la santé ou au handicap"],["find_dentist","Une aide pour trouver un dentiste"],["nothing","Rien de particulier"],["other","Autre"],["unknown","Je ne sais pas"]],
+    next: "dental_fear"
+  },
+  {
+    id: "dental_fear",
+    section: "Peur du dentiste",
+    title: "Ressentez-vous de la peur ou de l’anxiété à l’idée d’aller chez le chirurgien-dentiste ?",
+    type: "single",
+    options: [["yes","Oui"],["no","Non"],["unknown","Je ne sais pas"],["prefer_not","Je préfère ne pas répondre"]],
+    next: a => a === "yes" ? "dental_fear_score" : "last_scaling"
+  },
+  {
+    id: "dental_fear_score",
+    section: "Peur du dentiste",
+    title: "Sur une échelle de 1 à 10, à quel niveau évalueriez-vous votre peur ou votre anxiété à l’idée d’une consultation dentaire ?",
+    help: "1 = très faible ; 10 = extrêmement importante. Ce score décrit votre ressenti et ne constitue pas un diagnostic.",
+    type: "range", min: 1, max: 10, step: 1,
+    next: "dental_fear_reasons"
+  },
+  {
+    id: "dental_fear_reasons",
+    section: "Peur du dentiste",
+    title: "Qu’est-ce qui provoque principalement cette peur ou cette anxiété ?",
+    help: "Plusieurs réponses sont possibles.",
+    type: "multi",
+    options: [["pain","Peur d’avoir mal"],["needles","Injections / aiguilles"],["anesthesia","Anesthésie"],["noise","Bruit des instruments / fraise"],["blood","Vue du sang"],["smells","Odeurs du cabinet"],["bad_news","Peur qu’un problème important soit découvert"],["procedure","Peur d’une extraction ou d’une intervention"],["loss_control","Sensation de ne pas avoir le contrôle"],["cannot_stop","Peur de ne pas pouvoir demander une pause ou l’arrêt"],["gagging","Peur de s’étouffer / nausées"],["proximity","Proximité physique / travail dans la bouche"],["shame","Honte de l’état des dents"],["judgment","Peur d’être jugé(e)"],["cost","Coût potentiel des soins"],["bad_experience","Mauvaise expérience passée"],["stories","Peur transmise par l’entourage / histoires entendues"],["unknown","Je ne sais pas précisément"],["other","Autre"],["prefer_not","Je préfère ne pas répondre"]],
+    next: a => Array.isArray(a) && a.includes("bad_experience") ? "dental_bad_experience_when" : "dental_fear_delayed"
+  },
+  {
+    id: "dental_bad_experience_when",
+    section: "Peur du dentiste",
+    title: "À quand remonte cette mauvaise expérience dentaire ?",
+    type: "single",
+    options: [["lt1","Moins d’un an"],["1_5","1 à 5 ans"],["6_10","6 à 10 ans"],["gt10","Plus de 10 ans"],["childhood","Pendant mon enfance"],["unknown","Je ne m’en souviens pas"],["prefer_not","Je préfère ne pas répondre"]],
+    next: "dental_bad_experience_reasons"
+  },
+  {
+    id: "dental_bad_experience_reasons",
+    section: "Peur du dentiste",
+    title: "Qu’est-ce qui a rendu cette expérience difficile pour vous ?",
+    help: "Plusieurs réponses sont possibles.",
+    type: "multi",
+    options: [["pain","J’ai ressenti beaucoup de douleur"],["anesthesia_failed","L’anesthésie n’a pas suffisamment fonctionné"],["fear","J’ai eu très peur pendant les soins"],["not_explained","Je n’ai pas compris ce qui allait être fait / manque d’explications"],["not_listened","Ma peur ou ma douleur n’a pas semblé prise au sérieux"],["stop_not_respected","Je n’ai pas eu le sentiment que ma demande d’arrêt ou de pause était écoutée"],["judged","Je me suis senti(e) jugé(e), humilié(e) ou mal à l’aise"],["complication","J’ai eu une complication après le soin"],["result","Le résultat du traitement m’a déçu(e)"],["other","Autre"],["prefer_not","Je préfère ne pas répondre"]],
+    next: "dental_fear_delayed"
+  },
+  {
+    id: "dental_fear_delayed",
+    section: "Peur du dentiste",
+    title: "Cette peur vous a-t-elle déjà conduit(e) à repousser ou éviter une consultation dentaire ?",
+    type: "single",
+    options: [["multiple","Oui, plusieurs fois"],["once","Oui, une fois"],["no","Non"],["unknown","Je ne sais pas"],["prefer_not","Je préfère ne pas répondre"]],
     next: "last_scaling"
   },
   {
@@ -1323,7 +1515,7 @@ function renderQuestion() {
   } else if (question.type === "range") {
     const wrap = document.createElement("div");
     wrap.className = "panel";
-    const value = previous ?? 0;
+    const value = previous ?? question.min ?? 0;
     wrap.innerHTML = `
       <div style="display:flex;align-items:center;gap:18px;">
         <input id="range-input" style="width:100%" type="range" min="${question.min}" max="${question.max}" step="${question.step}" value="${value}">
